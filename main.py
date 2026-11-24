@@ -11,10 +11,32 @@ LINE = "i saw everything \u2014 the 3am searches, your ex's profile, the 47 alar
 
 # The sealed scorer gates on 1-200 UTF-8 characters, not only whitespace.
 # Fail loudly here rather than shipping an entry the gate would refuse.
-assert 1 <= len(LINE) <= 200 and LINE.strip(), "entry line fails the 1-200 char gate"
+def validate(text: str) -> str:
+    """Validate the entry line against the brief's gate.
+
+    Rules: must be a single non-empty line, 1-200 characters,
+    not only whitespace, and contain no control characters
+    (including newline / carriage return / tab).
+    Returns the text unchanged on success, raises ValueError otherwise.
+    """
+    if not isinstance(text, str):
+        raise ValueError("entry must be a string")
+    if "\n" in text or "\r" in text:
+        raise ValueError("entry must be a single line")
+    if any(ord(ch) < 32 or ord(ch) == 127 for ch in text):
+        raise ValueError("entry contains control characters")
+    if not text.strip():
+        raise ValueError("entry must not be only whitespace")
+    if not 1 <= len(text) <= 200:
+        raise ValueError("entry must be 1-200 characters")
+    return text
+
+
+assert validate(LINE) == LINE, "entry line fails the 1-200 char gate"
 
 
 def main() -> None:
+    validate(LINE)
     os.makedirs("/output", exist_ok=True)
     with open("/output/entry.txt", "w", encoding="utf-8") as f:
         f.write(LINE)
